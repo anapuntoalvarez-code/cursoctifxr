@@ -1,54 +1,314 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Mi Refugio Inmersivo - Isla 3D</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.min.js"></script>
-    <script src="https://unpkg.com/aframe-environment-component@1.3.2/dist/aframe-environment-component.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Casa Inmersiva en Isla Tropical</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      overflow:hidden;
+      font-family:Arial, sans-serif;
+      background:#87CEEB;
+    }
+
+    canvas{
+      display:block;
+    }
+
+    .info{
+      position:absolute;
+      top:20px;
+      left:20px;
+      color:white;
+      background:rgba(0,0,0,0.4);
+      padding:12px 18px;
+      border-radius:12px;
+      backdrop-filter: blur(5px);
+      z-index:10;
+    }
+
+    .info h1{
+      font-size:20px;
+      margin-bottom:6px;
+    }
+
+    .info p{
+      font-size:14px;
+    }
+  </style>
 </head>
+
 <body>
 
-    <a-scene>
-        <a-entity environment="preset: forest; 
-                               groundColor: #c2b280; 
-                               groundColor2: #b19d6d; 
-                               dressing: trees; 
-                               dressingAmount: 15; 
-                               dressingColor: #228b22;
-                               skyType: gradient; 
-                               skyColor: #24b5ff; 
-                               horizonColor: #eff9ff; 
-                               lighting: point;
-                               playArea: 1.2;
-                               flatShading: true">
-        </a-entity>
+<div class="info">
+  <h1>🏝 Casa Inmersiva</h1>
+  <p>Haz clic y mueve el ratón para explorar</p>
+</div>
 
-        <a-ocean color="#0077be" width="100" depth="100" density="20" speed="2" position="0 -0.1 0"></a-ocean>
+<script type="module">
 
-        <a-entity id="casa" position="0 0 -5">
-            <a-box position="0 1.5 0" width="4" height="3" depth="4" color="#f5f5f5"></a-box>
-            <a-cone position="0 4 0" radius-bottom="3.5" height="2" color="#8b4513" segments-radial="4"></a-cone>
-            <a-box position="0 0.75 2.01" width="1" height="1.5" depth="0.1" color="#4e2c0e"></a-box>
-            <a-box position="1.2 1.5 2.01" width="0.8" height="0.8" depth="0.1" color="#add8e6" opacity="0.7"></a-box>
-        </a-entity>
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/controls/OrbitControls.js';
 
-        <a-entity position="-4 0 -3">
-            <a-cylinder color="#5C4033" height="3" radius="0.15"></a-cylinder>
-            <a-sphere color="#228b22" position="0 1.8 0" radius="1.2" scale="1 0.3 1"></a-sphere>
-        </a-entity>
-        
-        <a-entity position="5 0 -6">
-            <a-cylinder color="#5C4033" height="4" radius="0.2"></a-cylinder>
-            <a-sphere color="#228b22" position="0 2.3 0" radius="1.5" scale="1 0.3 1"></a-sphere>
-        </a-entity>
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x87CEEB, 20, 120);
 
-        <a-entity id="rig" position="0 1.6 4">
-            <a-camera look-controls wasd-controls></a-camera>
-        </a-entity>
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth/window.innerHeight,
+  0.1,
+  1000
+);
 
-        <a-light type="ambient" color="#fff" intensity="0.6"></a-light>
-        <a-light type="directional" position="-1 1 1" intensity="0.8"></a-light>
+camera.position.set(0, 8, 25);
 
-    </a-scene>
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2.1;
+
+/////////////////////////////////////////
+// LUCES
+/////////////////////////////////////////
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(20, 30, 10);
+sun.castShadow = true;
+scene.add(sun);
+
+/////////////////////////////////////////
+// AGUA
+/////////////////////////////////////////
+
+const waterGeometry = new THREE.CircleGeometry(80, 64);
+
+const waterMaterial = new THREE.MeshPhongMaterial({
+  color:0x1ca3ec,
+  transparent:true,
+  opacity:0.9
+});
+
+const water = new THREE.Mesh(waterGeometry, waterMaterial);
+water.rotation.x = -Math.PI / 2;
+scene.add(water);
+
+/////////////////////////////////////////
+// ISLA
+/////////////////////////////////////////
+
+const islandGeometry = new THREE.CylinderGeometry(15, 18, 4, 64);
+
+const islandMaterial = new THREE.MeshStandardMaterial({
+  color:0xd9c28f
+});
+
+const island = new THREE.Mesh(islandGeometry, islandMaterial);
+island.position.y = 1;
+island.receiveShadow = true;
+scene.add(island);
+
+/////////////////////////////////////////
+// CÉSPED
+/////////////////////////////////////////
+
+const grassGeometry = new THREE.CylinderGeometry(13, 13, 1, 64);
+
+const grassMaterial = new THREE.MeshStandardMaterial({
+  color:0x3cb043
+});
+
+const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+grass.position.y = 3;
+grass.receiveShadow = true;
+scene.add(grass);
+
+/////////////////////////////////////////
+// CASA
+/////////////////////////////////////////
+
+const house = new THREE.Group();
+
+const wallsGeometry = new THREE.BoxGeometry(8, 5, 8);
+
+const wallsMaterial = new THREE.MeshStandardMaterial({
+  color:0xf5deb3
+});
+
+const walls = new THREE.Mesh(wallsGeometry, wallsMaterial);
+walls.castShadow = true;
+walls.position.y = 6;
+
+house.add(walls);
+
+const roofGeometry = new THREE.ConeGeometry(6.5, 4, 4);
+
+const roofMaterial = new THREE.MeshStandardMaterial({
+  color:0x8b0000
+});
+
+const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+roof.position.y = 10;
+roof.rotation.y = Math.PI / 4;
+roof.castShadow = true;
+
+house.add(roof);
+
+/////////////////////////////////////////
+// PUERTA
+/////////////////////////////////////////
+
+const doorGeometry = new THREE.BoxGeometry(1.5, 3, 0.2);
+
+const doorMaterial = new THREE.MeshStandardMaterial({
+  color:0x5c4033
+});
+
+const door = new THREE.Mesh(doorGeometry, doorMaterial);
+door.position.set(0, 4.5, 4.1);
+
+house.add(door);
+
+/////////////////////////////////////////
+// VENTANAS
+/////////////////////////////////////////
+
+function createWindow(x,z){
+
+  const winGeo = new THREE.BoxGeometry(1.5,1.5,0.2);
+
+  const winMat = new THREE.MeshStandardMaterial({
+    color:0x87cefa,
+    emissive:0x87cefa,
+    emissiveIntensity:0.3
+  });
+
+  const windowMesh = new THREE.Mesh(winGeo, winMat);
+
+  windowMesh.position.set(x,6.5,z);
+
+  house.add(windowMesh);
+}
+
+createWindow(-2.5,4.1);
+createWindow(2.5,4.1);
+
+scene.add(house);
+
+/////////////////////////////////////////
+// PALMERAS
+/////////////////////////////////////////
+
+function createPalm(x,z){
+
+  const palm = new THREE.Group();
+
+  // Tronco
+  const trunkGeo = new THREE.CylinderGeometry(0.4,0.7,8,8);
+
+  const trunkMat = new THREE.MeshStandardMaterial({
+    color:0x8b5a2b
+  });
+
+  const trunk = new THREE.Mesh(trunkGeo,trunkMat);
+
+  trunk.position.y = 7;
+  trunk.castShadow = true;
+
+  palm.add(trunk);
+
+  // Hojas
+  for(let i=0;i<6;i++){
+
+    const leafGeo = new THREE.BoxGeometry(0.3,4,1);
+
+    const leafMat = new THREE.MeshStandardMaterial({
+      color:0x228b22
+    });
+
+    const leaf = new THREE.Mesh(leafGeo,leafMat);
+
+    leaf.position.y = 11;
+
+    leaf.rotation.z = Math.PI / 3;
+
+    leaf.rotation.y = (Math.PI * 2 / 6) * i;
+
+    palm.add(leaf);
+  }
+
+  palm.position.set(x,0,z);
+
+  scene.add(palm);
+}
+
+createPalm(10,10);
+createPalm(-10,8);
+createPalm(12,-8);
+createPalm(-12,-10);
+createPalm(0,-13);
+
+/////////////////////////////////////////
+// SOL
+/////////////////////////////////////////
+
+const sunGeo = new THREE.SphereGeometry(4,32,32);
+
+const sunMat = new THREE.MeshBasicMaterial({
+  color:0xffdd55
+});
+
+const sunMesh = new THREE.Mesh(sunGeo,sunMat);
+
+sunMesh.position.set(-40,40,-60);
+
+scene.add(sunMesh);
+
+/////////////////////////////////////////
+// ANIMACIÓN AGUA
+/////////////////////////////////////////
+
+function animate(){
+
+  requestAnimationFrame(animate);
+
+  controls.update();
+
+  water.rotation.z += 0.0005;
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+/////////////////////////////////////////
+// RESPONSIVE
+/////////////////////////////////////////
+
+window.addEventListener('resize',()=>{
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+});
+
+</script>
 
 </body>
 </html>
